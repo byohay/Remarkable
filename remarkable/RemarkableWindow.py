@@ -40,7 +40,7 @@ import styles
 import unicodedata
 import warnings
 import datetime
-
+from FindManager import FindManager
 
 #Check if gtkspellcheck is installed
 try:
@@ -142,6 +142,18 @@ class RemarkableWindow(Window):
 
         text = ""
 
+        self.wrap_box = self.builder.get_object("wrap_box")
+        self.find_entry = self.builder.get_object("find_entry")
+        self.replace_entry = self.builder.get_object("replace_entry")
+        match_case = self.builder.get_object("match_case")
+        whole_word = self.builder.get_object("whole_word")
+        regex = self.builder.get_object("regex")
+        self.findbar = self.builder.get_object('findbar')
+        self.find_manager = \
+            FindManager(self.findbar, self.wrap_box, self.find_entry,
+                        self.replace_entry, match_case, whole_word, regex)
+        self.find_manager.set_text_view(self.text_view)
+
         #Check if filename has been specified in terminal command
         if len(sys.argv) > 1:
             self.name = sys.argv[1]
@@ -160,7 +172,7 @@ class RemarkableWindow(Window):
 
         #Check if an updated version of application exists
         _thread.start_new_thread(self.check_for_updates, ())
-        
+
         self.text_view.grab_focus()
         
         if spellcheck_enabled:
@@ -174,6 +186,21 @@ class RemarkableWindow(Window):
         self.scrolledwindow_live_preview.get_vadjustment().set_lower(1)
 
         self.temp_file_list = []
+
+    def on_find_next_clicked(self, widget):
+        self.find_manager.on_find_next_button_clicked(widget)
+
+    def on_find_previous_clicked(self, widget):
+        self.find_manager.on_find_previous_button_clicked(widget)
+
+    def on_find_entry_changed(self, entry):
+        self.find_manager.on_find_box_text_changed(entry)
+
+    def on_replace_clicked(self, widget):
+        self.find_manager.on_replace_button_clicked(widget)
+
+    def on_replace_all_clicked(self, widget):
+        self.find_manager.on_replace_all_button_clicked(widget)
 
     def can_redo_changed(self, widget):
         if self.text_buffer.can_redo():
@@ -217,6 +244,9 @@ class RemarkableWindow(Window):
             self.remarkable_settings = eval(settings_file.read())
             settings_file.close()
             self.load_settings()
+
+        self.findbar.hide()
+        # self.wrap_box.set_visible(False)
 
     def write_settings(self):
         settings_file = open(self.settings_path, 'w')
@@ -658,6 +688,9 @@ class RemarkableWindow(Window):
     def redo(self, widget):
         if self.text_buffer.can_redo():
             self.text_buffer.redo()
+
+    def on_menuitem_find_activate(self, widget):
+        self.find_manager.show()
 
     def on_menuitem_cut_activate(self, widget):
         if self.text_buffer.get_has_selection():
