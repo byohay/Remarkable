@@ -175,12 +175,6 @@ class RemarkableWindow(Window):
         _thread.start_new_thread(self.check_for_updates, ())
 
         self.text_view.grab_focus()
-        
-        if spellcheck_enabled:
-            try:
-                self.spellchecker = SpellChecker(self.text_view, locale.getdefaultlocale()[0]) #Enabling spell checking
-            except:
-                pass #Spell checking not enabled
 
         self.tv_scrolled = self.scrolledwindow_text_view.get_vadjustment().connect("value-changed", self.scrollPreviewTo)
         self.lp_scrolled_fix = self.scrolledwindow_live_preview.get_vadjustment().connect("value-changed", self.scrollPreviewToFix)
@@ -237,6 +231,7 @@ class RemarkableWindow(Window):
             self.remarkable_settings['word-wrap'] = True
             self.remarkable_settings['zoom-level'] = 1
             self.remarkable_settings['rtl'] = False
+            self.remarkable_settings['spellcheck_lang'] = locale.getdefaultlocale()[0]
             settings_file = open(self.settings_path, 'w')
             settings_file.write(str(self.remarkable_settings))
             settings_file.close()
@@ -299,6 +294,20 @@ class RemarkableWindow(Window):
 
         if 'rtl' in self.remarkable_settings and self.remarkable_settings['rtl']:
             self.builder.get_object("menuitem_rtl").set_active(True)
+
+        if spellcheck_enabled and 'spellcheck_lang' in self.remarkable_settings and \
+                self.remarkable_settings['spellcheck_lang']:
+            spellcheck_lang = self.remarkable_settings['spellcheck_lang']
+            try:
+                self.spellchecker = SpellChecker(self.text_view, spellcheck_lang)
+            except:
+                pass
+            language_to_menuitem = {
+                'en_US': 'menuitem_english_us',
+                'he_IL': 'menuitem_hebrew'
+            }
+            menuitem_name = language_to_menuitem[spellcheck_lang]
+            self.builder.get_object(menuitem_name).set_active(True)
 
         # Try to load the previously chosen font, may fail as font may not exist, ect.
         try:
@@ -689,6 +698,16 @@ class RemarkableWindow(Window):
     def redo(self, widget):
         if self.text_buffer.can_redo():
             self.text_buffer.redo()
+
+    def on_menuitem_hebrew_toggled(self, widget):
+        if widget.get_active():
+            self.remarkable_settings['spellcheck_lang'] = 'he_IL'
+            self.write_settings()
+
+    def on_menuitem_english_us_toggled(self, widget):
+        if widget.get_active():
+            self.remarkable_settings['spellcheck_lang'] = 'en_US'
+            self.write_settings()
 
     def on_menuitem_find_activate(self, widget):
         self.find_manager.show()
