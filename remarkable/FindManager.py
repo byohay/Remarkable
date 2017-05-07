@@ -121,8 +121,11 @@ class FindManager(object):
     def _find_text(self, backwards=False, start_at=1):
         buffer = self.text_view.get_buffer()
         current_pos_iter = buffer.get_iter_at_mark(buffer.get_insert())
-        self.find_box_widget.get_style_context().remove_class("text_not_found")
+        self.find_box_widget.get_style_context().remove_class("text-not-found")
         # self.wrap_widget.set_visible(False)
+
+        if len(self.find_box_widget.get_text()) == 0:
+            return
 
         if backwards:
             was_found, match_start, match_end = \
@@ -138,7 +141,7 @@ class FindManager(object):
 
         if not was_found:
             buffer.place_cursor(current_pos_iter)
-            self.find_box_widget.get_style_context().add_class("text_not_found")
+            self.find_box_widget.get_style_context().add_class("text-not-found")
             return False
 
         buffer.place_cursor(match_start)

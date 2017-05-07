@@ -155,6 +155,20 @@ class RemarkableWindow(Window):
                         self.replace_entry, match_case, whole_word, regex)
         self.find_manager.set_text_view(self.text_view)
 
+        style_provider = Gtk.CssProvider()
+        css = """
+        .text-not-found {
+        background: rgb(204, 22, 22);
+        }
+        """
+        style_provider.load_from_data(bytes(css.encode()))
+
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            style_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
         #Check if filename has been specified in terminal command
         if len(sys.argv) > 1:
             self.name = sys.argv[1]
